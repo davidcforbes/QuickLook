@@ -52,6 +52,17 @@ Get it from one of the following sources:
 1. Preview next file by clicking on it or using arrow-keys (arrow-keys move selection in the background if the preview window is not in focus)
 1. When you're done close it by either hitting <kbd>Spacebar</kbd> again, pressing <kbd>Esc</kbd> or clicking the `⨉` button
 
+### Command-line usage
+
+QuickLook can also be started with a file path. When launched with the `/viewer`
+option it will close automatically after the preview window is closed. This is
+useful for associating certain file types (for example `.md` Markdown files)
+with QuickLook.
+
+```powershell
+QuickLook.exe /viewer README.md
+```
+
 ### Hotkeys and buttons
 
  - <kbd>Spacebar</kbd> Show/Hide the preview window

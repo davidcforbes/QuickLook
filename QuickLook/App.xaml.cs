@@ -46,6 +46,13 @@ public partial class App : Application
     public static readonly bool IsGPUInBlacklist = SystemHelper.IsGPUInBlacklist();
     public static readonly bool IsPortable = SettingHelper.IsPortableVersion();
 
+    /// <summary>
+    /// When set, QuickLook will close once the preview window is closed. This is
+    /// useful for file type associations where QuickLook should behave like a
+    /// normal viewer.
+    /// </summary>
+    public static bool ExitAfterPreview { get; private set; }
+
     private bool _cleanExit = true;
     private Mutex _isRunning;
 
@@ -191,6 +198,19 @@ public partial class App : Application
 
     private void Application_Startup(object sender, StartupEventArgs e)
     {
+        string pathArg = null;
+        foreach (var arg in e.Args)
+        {
+            if (arg.Equals("/viewer", StringComparison.OrdinalIgnoreCase))
+            {
+                ExitAfterPreview = true;
+            }
+            else if (pathArg == null && !arg.StartsWith("/"))
+            {
+                pathArg = arg;
+            }
+        }
+
         if (!EnsureOSVersion()
             || !EnsureFirstInstance(e.Args)
             || !EnsureFolderWritable(SettingHelper.LocalDataPath))
@@ -204,8 +224,8 @@ public partial class App : Application
         RunListener(e);
 
         // first instance: run and preview this file
-        if (e.Args.Any() && (Directory.Exists(e.Args.First()) || File.Exists(e.Args.First())))
-            PipeServerManager.SendMessage(PipeMessages.Toggle, e.Args.First());
+        if (!string.IsNullOrEmpty(pathArg))
+            PipeServerManager.SendMessage(PipeMessages.Toggle, pathArg);
     }
 
     private bool EnsureOSVersion()
@@ -281,10 +301,13 @@ public partial class App : Application
         if (isFirst)
             return true;
 
+        string pathArg = args.FirstOrDefault(a => !a.StartsWith("/"));
+        string[] options = args.Where(a => a != pathArg).ToArray();
+
         // second instance: preview this file
-        if (args.Any() && (Directory.Exists(args.First()) || File.Exists(args.First())))
+        if (!string.IsNullOrEmpty(pathArg) && (Directory.Exists(pathArg) || File.Exists(pathArg)))
         {
-            PipeServerManager.SendMessage(PipeMessages.Toggle, args.First(), [.. args.Skip(1)]);
+            PipeServerManager.SendMessage(PipeMessages.Toggle, pathArg, options);
         }
         // second instance: duplicate
         else
