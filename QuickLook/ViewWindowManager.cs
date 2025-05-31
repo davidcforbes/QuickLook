@@ -220,6 +220,11 @@ internal class ViewWindowManager : IDisposable
         _viewerWindow = new ViewerWindow();
         _viewerWindow.Closed += (sender, e) =>
         {
+            if (App.ExitAfterPreview)
+            {
+                Application.Current.Shutdown();
+                return;
+            }
             if (ProcessHelper.IsShuttingDown())
                 return;
             if (sender is not ViewerWindow w || w.Pinned)
